@@ -1,13 +1,12 @@
 from codefly import codefly
-from codefly.codefly import load_service_configuration
+from codefly.codefly import init, service
 import os
 
 
 def test_load_configurations():
-    conf = load_service_configuration("tests/testdata")
-    assert conf.name == "server"
-    assert conf.application == "backend"
-    assert conf.version == "0.0.1"
+    init("tests/testdata")
+    assert service().name == "server"
+    assert service().application == "backend"
 
 
 def test_environment_variable_endpoints():
@@ -17,8 +16,7 @@ def test_environment_variable_endpoints():
     assert endpoint.port == 10123
     assert endpoint.port_address == ":10123"
 
-    load_service_configuration("tests/testdata")
-    assert codefly.service.name == "server"
+    init("tests/testdata")
 
     endpoint = codefly.get_endpoint("self/rest")
     assert endpoint.host == "localhost"

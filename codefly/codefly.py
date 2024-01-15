@@ -3,9 +3,6 @@ import os
 import yaml
 from typing import Optional
 
-service = None
-
-
 class Service(BaseModel):
     name: Optional[str] = None
     version: Optional[str] = None
@@ -18,14 +15,22 @@ class Service(BaseModel):
     endpoints: Optional[list] = None
     spec: Optional[dict] = None
 
+current_service = None
 
-def load_service_configuration(d: Optional[str] = ".") -> Optional[Service]:
+
+def service() -> Optional[Service]:
+    global current_service
+    if current_service is None:
+        init(".")
+    return current_service
+
+
+def init(d: Optional[str] = "."):
     """Load the service configuration from the service.codefly.yaml file"""
     path = f"{d}/service.codefly.yaml"
     with open(path, 'r') as f:
-        global service
-        service = Service(**yaml.safe_load(f))
-        return service
+        global current_service
+        current_service = Service(**yaml.safe_load(f))
 
 
 class Endpoint(BaseModel):
@@ -37,7 +42,7 @@ class Endpoint(BaseModel):
 def get_endpoint(unique: str) -> Optional[Endpoint]:
     """Get the endpoint from the environment variable"""
     if unique.startswith("self"):
-        unique = unique.replace("self", f"{service.application}/{service.name}", 1)
+        unique = unique.replace("self", f"{service().application}/{service().name}", 1)
 
     unique = unique.upper().replace('/', '__', 1)
     unique = unique.replace('/', '___')
@@ -53,7 +58,6 @@ def get_service_provider_info(unique: str, name: str, key: str) -> Optional[str]
     unique = unique.upper().replace('/', '__', 1)
     env = f"CODEFLY_PROVIDER__{unique}"
     return os.environ.get(env)
-
 
 
 def get_project_provider_info(name: str, key: str) -> Optional[str]:
