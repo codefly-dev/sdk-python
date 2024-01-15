@@ -1,0 +1,19 @@
+name: server
+version: 0.0.1
+application: backend
+domain: github.com/codefly-dev/calc/snake
+namespace: calc
+agent:
+    kind: codefly:service
+    name: python-fastapi
+    version: 0.0.0
+    publisher: codefly.dev
+dependencies: []
+provider-dependencies: []
+endpoints:
+    - name: rest
+      visibility: private
+      api: rest
+spec:
+    debug: false
+    watch: true
