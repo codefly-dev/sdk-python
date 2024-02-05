@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 import os
 import yaml
-from typing import Optional
+from typing import Optional, Dict
+
 
 class Service(BaseModel):
     name: Optional[str] = None
@@ -14,6 +15,7 @@ class Service(BaseModel):
     provider_dependencies: Optional[list] = None
     endpoints: Optional[list] = None
     spec: Optional[dict] = None
+
 
 current_service = None
 
@@ -31,6 +33,10 @@ def init(d: Optional[str] = "."):
     with open(path, 'r') as f:
         global current_service
         current_service = Service(**yaml.safe_load(f))
+
+
+def is_local() -> bool:
+    return os.getenv("CODEFLY_ENVIRONMENT") == "local"
 
 
 class Endpoint(BaseModel):
@@ -63,3 +69,11 @@ def get_service_provider_info(unique: str, name: str, key: str) -> Optional[str]
 def get_project_provider_info(name: str, key: str) -> Optional[str]:
     env = f"CODEFLY_PROVIDER___{name}____{key}".upper()
     return os.environ.get(env)
+
+
+def user_id_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    return headers.get("X-CODEFLY-USER-ID")
+
+
+def user_email_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    return headers.get("X-CODEFLY-USER-EMAIL")

@@ -9,6 +9,13 @@ def test_load_configurations():
     assert service().application == "backend"
 
 
+def test_environment():
+    os.environ["CODEFLY_ENVIRONMENT"] = "local"
+    assert codefly.is_local()
+    os.environ["CODEFLY_ENVIRONMENT"] = "staging"
+    assert not codefly.is_local()
+
+
 def test_environment_variable_endpoints():
     os.environ["CODEFLY_ENDPOINT__BACKEND__SERVER___REST"] = "localhost:10123"
     endpoint = codefly.get_endpoint("backend/server/rest")
