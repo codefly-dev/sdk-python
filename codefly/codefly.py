@@ -77,3 +77,15 @@ def user_id_from_headers(headers: Dict[str, str]) -> Optional[str]:
 
 def user_email_from_headers(headers: Dict[str, str]) -> Optional[str]:
     return headers.get("X-CODEFLY-USER-EMAIL")
+
+
+def user_name_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    return headers.get("X-CODEFLY-USER-NAME")
+
+
+def user_given_name_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    return headers.get("X-CODEFLY-USER-GIVEN-NAME")
+
+
+def user_family_name_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    return headers.get("X-CODEFLY-USER-FAMILY-NAME")
