@@ -2,6 +2,7 @@ from pydantic import BaseModel
 import os
 import yaml
 from typing import Optional, Dict
+from urllib.parse import urlparse
 
 
 class Service(BaseModel):
@@ -28,11 +29,29 @@ def service() -> Optional[Service]:
 
 
 def init(d: Optional[str] = "."):
-    """Load the service configuration from the service.codefly.yaml file"""
-    path = f"{d}/service.codefly.yaml"
-    with open(path, 'r') as f:
+    """Load the service configuration from the service.codefly.yaml file or up"""
+    configuration_path = find_service_path(d)
+    if configuration_path:
+        load_service(configuration_path)
+
+
+def load_service(configuration_path: str):
+    """Load service."""
+    with open(configuration_path, 'r') as f:
         global current_service
         current_service = Service(**yaml.safe_load(f))
+
+
+def find_service_path(d: str) -> Optional[str]:
+    """Find service in directory or up."""
+    current_dir = d
+    while current_dir != "/":
+        file_path = os.path.join(current_dir, 'service.codefly.yaml')
+        if os.path.isfile(file_path):
+            return file_path
+        else:
+            current_dir = os.path.dirname(current_dir)
+    return None
 
 
 def is_local() -> bool:
@@ -54,7 +73,13 @@ def get_endpoint(unique: str) -> Optional[Endpoint]:
     unique = unique.replace('/', '___')
     env = f"CODEFLY_ENDPOINT__{unique}"
     if env in os.environ:
-        host, port = os.environ[env].split(":")
+        address = os.environ[env]
+        tokens = address.split(":")
+        if len(tokens) == 2:
+            host, port = tokens
+        else:
+            parsed_url = urlparse(address)
+            host, port = parsed_url.hostname, parsed_url.port
         return Endpoint(host=host, port_address=f":{port}", port=int(port))
     return None
 

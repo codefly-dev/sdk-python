@@ -4,7 +4,7 @@ import os
 
 
 def test_load_configurations():
-    init("tests/testdata")
+    init("tests/testdata/src")
     assert service().name == "server"
     assert service().application == "backend"
 
@@ -17,15 +17,28 @@ def test_environment():
 
 
 def test_environment_variable_endpoints():
-    os.environ["CODEFLY_ENDPOINT__BACKEND__SERVER___REST"] = "localhost:10123"
+    os.environ["CODEFLY_ENDPOINT__BACKEND__SERVER___REST"] = "http://localhost:10123"
     endpoint = codefly.get_endpoint("backend/server/rest")
     assert endpoint.host == "localhost"
     assert endpoint.port == 10123
     assert endpoint.port_address == ":10123"
 
-    init("tests/testdata")
+    init("tests/testdata/src")
 
     endpoint = codefly.get_endpoint("self/rest")
+    assert endpoint.host == "localhost"
+    assert endpoint.port == 10123
+    assert endpoint.port_address == ":10123"
+
+    os.environ["CODEFLY_ENDPOINT__BACKEND__SERVER___GRPC"] = "localhost:10123"
+    endpoint = codefly.get_endpoint("backend/server/grpc")
+    assert endpoint.host == "localhost"
+    assert endpoint.port == 10123
+    assert endpoint.port_address == ":10123"
+
+    init("tests/testdata/src")
+
+    endpoint = codefly.get_endpoint("self/grpc")
     assert endpoint.host == "localhost"
     assert endpoint.port == 10123
     assert endpoint.port_address == ":10123"
