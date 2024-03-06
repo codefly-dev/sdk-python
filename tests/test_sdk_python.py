@@ -16,6 +16,10 @@ def test_environment():
     assert not codefly.is_local()
 
 
+def test_service_not_found():
+    init("tests")
+
+
 def test_environment_variable_endpoints():
     os.environ["CODEFLY_ENDPOINT__BACKEND__SERVER___REST"] = "http://localhost:10123"
     endpoint = codefly.get_endpoint("backend/server/rest")

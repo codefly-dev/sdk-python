@@ -45,7 +45,7 @@ def load_service(configuration_path: str):
 def find_service_path(d: str) -> Optional[str]:
     """Find service in directory or up."""
     current_dir = d
-    while current_dir != "/":
+    while current_dir:
         file_path = os.path.join(current_dir, 'service.codefly.yaml')
         if os.path.isfile(file_path):
             return file_path
