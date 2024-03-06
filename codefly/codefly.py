@@ -24,13 +24,15 @@ current_service = None
 def service() -> Optional[Service]:
     global current_service
     if current_service is None:
-        init(".")
+        init()
     return current_service
 
 
-def init(d: Optional[str] = "."):
+def init(init_dir: Optional[str] = None):
     """Load the service configuration from the service.codefly.yaml file or up"""
-    configuration_path = find_service_path(d)
+    if not init_dir:
+        init_dir = os.getcwd()
+    configuration_path = find_service_path(init_dir)
     if configuration_path:
         load_service(configuration_path)
 
