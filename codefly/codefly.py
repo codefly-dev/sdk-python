@@ -21,11 +21,15 @@ class Service(BaseModel):
 current_service = None
 
 
-def service() -> Optional[Service]:
+def get_service() -> Optional[Service]:
     global current_service
     if current_service is None:
         init()
     return current_service
+
+
+def get_unique() -> str:
+    return f"{get_service().application}/{get_service().name}"
 
 
 def init(init_dir: Optional[str] = None):
@@ -69,8 +73,9 @@ class Endpoint(BaseModel):
 def get_endpoint(unique: str) -> Optional[Endpoint]:
     """Get the endpoint from the environment variable"""
     if unique.startswith("self"):
-        unique = unique.replace("self", f"{service().application}/{service().name}", 1)
+        unique = unique.replace("self", f"{get_unique()}", 1)
 
+    unique = unique.replace("-", "_")
     unique = unique.upper().replace('/', '__', 1)
     unique = unique.replace('/', '___')
     env = f"CODEFLY_ENDPOINT__{unique}"
@@ -86,7 +91,12 @@ def get_endpoint(unique: str) -> Optional[Endpoint]:
     return None
 
 
-def get_service_provider_info(unique: str, name: str, key: str) -> Optional[str]:
+def get_service_provider_info(service: str, name: str, key: str, application: Optional[str] = None) -> Optional[str]:
+    if not application:
+        application = get_service().application
+    unique = f"{application}/{service}"
+    # Replace - by _ as they are not great for env
+    unique = unique.replace("-", "_")
     unique = f"{unique}___{name}____{key}"
     unique = unique.upper().replace('/', '__', 1)
     env = f"CODEFLY_PROVIDER__{unique}"

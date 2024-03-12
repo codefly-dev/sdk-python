@@ -1,12 +1,12 @@
 from codefly import codefly
-from codefly.codefly import init, service
+from codefly.codefly import init, get_service
 import os
 
 
 def test_load_configurations():
     init("tests/testdata/src")
-    assert service().name == "server"
-    assert service().application == "backend"
+    assert get_service().name == "server"
+    assert get_service().application == "backend"
 
 
 def test_environment():
@@ -55,6 +55,18 @@ def test_environment_variable_project_provider():
 
 
 def test_environment_variable_service_provider():
-    os.environ["CODEFLY_PROVIDER__MANAGEMENT__STORE___POSTGRES____CONNECTION"] = "myconnection"
-    value = codefly.get_service_provider_info("management/store", "postgres", "connection")
-    assert value == "myconnection"
+    connection = "postgresql://user:password@localhost:30140/counter-python-nextjs-postgres?sslmode=disable"
+    os.environ["CODEFLY_PROVIDER__COUNTER_PYTHON_NEXTJS_POSTGRES__STORE___POSTGRES____CONNECTION"] = connection
+    value = codefly.get_service_provider_info(application="counter-python-nextjs-postgres", service="store",
+                                              name="postgres", key="connection")
+    assert value == connection
+
+
+def test_environment_variable_service_provider_without_application():
+    init("tests/testdata/src")
+    connection = "postgresql://user:password@localhost:30140/counter-python-nextjs-postgres?sslmode=disable"
+    os.environ["CODEFLY_PROVIDER__BACKEND__STORE___POSTGRES____CONNECTION"] = connection
+    value = codefly.get_service_provider_info(service="store",
+                                              name="postgres", key="connection")
+    assert value == connection
+
