@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "codefly-sdk"
-version = "0.0.7"
+version = "0.0.8"
 description = ""
 authors = ["Antoine Toussaint <antoine.toussaint@codefly.ai>"]
 packages = [{include = "codefly"}]

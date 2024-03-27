@@ -2,7 +2,7 @@ from pydantic import BaseModel
 import os
 import yaml
 from typing import Optional, Dict
-from urllib.parse import urlparse
+import base64
 
 
 class Service(BaseModel):
@@ -64,48 +64,91 @@ def is_local() -> bool:
     return os.getenv("CODEFLY_ENVIRONMENT") == "local"
 
 
-class Endpoint(BaseModel):
-    host: Optional[str] = None
-    port_address: Optional[str] = None
-    port: Optional[int] = None
+# class Endpoint(BaseModel):
+#     host: Optional[str] = None
+#     port_address: Optional[str] = None
+#     port: Optional[int] = None
+#
+#
+# def get_endpoint(unique: str) -> Optional[Endpoint]:
+#     """Get the endpoint from the environment variable"""
+#     if unique.startswith("self"):
+#         unique = unique.replace("self", f"{get_unique()}", 1)
+#
+#     unique = unique.replace("-", "_")
+#     unique = unique.upper().replace('/', '__', 1)
+#     unique = unique.replace('/', '___')
+#     env = f"CODEFLY_ENDPOINT__{unique}"
+#     if env in os.environ:
+#         address = os.environ[env]
+#         tokens = address.split(":")
+#         if len(tokens) == 2:
+#             host, port = tokens
+#         else:
+#             parsed_url = urlparse(address)
+#             host, port = parsed_url.hostname, parsed_url.port
+#         return Endpoint(host=host, port_address=f":{port}", port=int(port))
+#     return None
 
 
-def get_endpoint(unique: str) -> Optional[Endpoint]:
-    """Get the endpoint from the environment variable"""
-    if unique.startswith("self"):
-        unique = unique.replace("self", f"{get_unique()}", 1)
-
-    unique = unique.replace("-", "_")
-    unique = unique.upper().replace('/', '__', 1)
-    unique = unique.replace('/', '___')
-    env = f"CODEFLY_ENDPOINT__{unique}"
-    if env in os.environ:
-        address = os.environ[env]
-        tokens = address.split(":")
-        if len(tokens) == 2:
-            host, port = tokens
-        else:
-            parsed_url = urlparse(address)
-            host, port = parsed_url.hostname, parsed_url.port
-        return Endpoint(host=host, port_address=f":{port}", port=int(port))
-    return None
+def decode_base64(data: str) -> str:
+    decoded_bytes = base64.b64decode(data)
+    return decoded_bytes.decode('utf-8')
 
 
-def get_service_provider_info(service: str, name: str, key: str, application: Optional[str] = None) -> Optional[str]:
+def configuration(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> Optional[str]:
+    if not name:
+        raise KeyError("name is required")
+    if not key:
+        raise KeyError("key is required")
+    if service:
+        return _get_service_configuration(service, name, key, application=application)
+    return _get_project_configuration(name, key)
+
+def secret(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> Optional[str]:
+    if not name:
+        raise KeyError("name is required")
+    if not key:
+        raise KeyError("key is required")
+    if service:
+        return _get_service_configuration(service, name, key, application=application, is_secret=True)
+    return _get_project_configuration(name, key, is_secret=True)
+
+
+def _get_service_configuration(service: str, name: str, key: str, application: Optional[str] = None,
+                               is_secret: bool = False) -> Optional[str]:
     if not application:
         application = get_service().application
-    unique = f"{application}/{service}"
+    env_key = f"{application}__{service}"
     # Replace - by _ as they are not great for env
-    unique = unique.replace("-", "_")
-    unique = f"{unique}___{name}____{key}"
-    unique = unique.upper().replace('/', '__', 1)
-    env = f"CODEFLY_PROVIDER__{unique}"
-    return os.environ.get(env)
+    env_key = env_key.replace("-", "_")
+    env_key = f"{env_key}__{name}__{key}"
+    prefix = "CODEFLY__SERVICE_CONFIGURATION"
+    if is_secret:
+        prefix = "CODEFLY__SERVICE_SECRET_CONFIGURATION"
+    key = f"{prefix}__{env_key}"
+    key = key.upper()
+    value = os.getenv(key)
+    if not value:
+        return None
+    return decode_base64(value)
 
 
-def get_project_provider_info(name: str, key: str) -> Optional[str]:
-    env = f"CODEFLY_PROVIDER___{name}____{key}".upper()
-    return os.environ.get(env)
+def _get_project_configuration(name: str, key: str,
+                               is_secret: bool = False) -> Optional[str]:
+    env_key = f"{name}__{key}"
+    prefix = "CODEFLY__PROJECT_CONFIGURATION"
+    if is_secret:
+        prefix = "CODEFLY__PROJECT_SECRET_CONFIGURATION"
+    key = f"{prefix}__{env_key}"
+    key = key.upper()
+    print(key)
+    value = os.getenv(key)
+    if not value:
+        return None
+    return decode_base64(value)
+
+
 
 
 def user_id_from_headers(headers: Dict[str, str]) -> Optional[str]:
