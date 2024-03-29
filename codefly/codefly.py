@@ -96,7 +96,14 @@ def decode_base64(data: str) -> str:
     return decoded_bytes.decode('utf-8')
 
 
-def configuration(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> Optional[str]:
+def is_running() -> bool:
+    """Returns true if we are in running mode."""
+    key = "CODEFLY__RUNNING"
+    return os.getenv(key) is not None
+
+
+def configuration(name: str = None, key: str = None, service: Optional[str] = None,
+                  application: Optional[str] = None) -> Optional[str]:
     if not name:
         raise KeyError("name is required")
     if not key:
@@ -105,7 +112,9 @@ def configuration(name: str = None, key: str = None, service: Optional[str] = No
         return _get_service_configuration(service, name, key, application=application)
     return _get_project_configuration(name, key)
 
-def secret(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> Optional[str]:
+
+def secret(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> \
+        Optional[str]:
     if not name:
         raise KeyError("name is required")
     if not key:
@@ -147,8 +156,6 @@ def _get_project_configuration(name: str, key: str,
     if not value:
         return None
     return decode_base64(value)
-
-
 
 
 def user_id_from_headers(headers: Dict[str, str]) -> Optional[str]:
