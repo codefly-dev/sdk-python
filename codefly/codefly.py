@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from pydantic import BaseModel
 import os
 import yaml
@@ -64,36 +66,36 @@ def is_local() -> bool:
     return os.getenv("CODEFLY_ENVIRONMENT") == "local"
 
 
-# class Endpoint(BaseModel):
-#     host: Optional[str] = None
-#     port_address: Optional[str] = None
-#     port: Optional[int] = None
-#
-#
-# def get_endpoint(unique: str) -> Optional[Endpoint]:
-#     """Get the endpoint from the environment variable"""
-#     if unique.startswith("self"):
-#         unique = unique.replace("self", f"{get_unique()}", 1)
-#
-#     unique = unique.replace("-", "_")
-#     unique = unique.upper().replace('/', '__', 1)
-#     unique = unique.replace('/', '___')
-#     env = f"CODEFLY_ENDPOINT__{unique}"
-#     if env in os.environ:
-#         address = os.environ[env]
-#         tokens = address.split(":")
-#         if len(tokens) == 2:
-#             host, port = tokens
-#         else:
-#             parsed_url = urlparse(address)
-#             host, port = parsed_url.hostname, parsed_url.port
-#         return Endpoint(host=host, port_address=f":{port}", port=int(port))
-#     return None
+class Endpoint(BaseModel):
+    address: str
+    host: str
+    port_address: str
+    port: int
 
 
-def decode_base64(data: str) -> str:
-    decoded_bytes = base64.b64decode(data)
-    return decoded_bytes.decode('utf-8')
+def endpoint(application: Optional[str] = None, service: Optional[str] = None, name: Optional[str] = None, api: Optional[str] = None) -> Optional[Endpoint]:
+    """Get the endpoint from the environment variable"""
+    if not service:
+        service = get_service().name
+    if not application:
+        application = get_service().application
+
+    key = f"CODEFLY__ENDPOINT__{application}__{service}"
+    if not name and api:
+        name = api
+    if not api and name:
+        api = name
+    key = f"{key}__{name}__{api}".upper()
+    if key not in os.environ:
+        return None
+    address = os.environ[key]
+    tokens = address.split(":")
+    if len(tokens) == 2:
+        host, port = tokens
+    else:
+        parsed_url = urlparse(address)
+        host, port = parsed_url.hostname, parsed_url.port
+    return Endpoint(host=host, address=address, port_address=f":{port}", port=int(port))
 
 
 def is_running() -> bool:
@@ -137,10 +139,7 @@ def _get_service_configuration(service: str, name: str, key: str, application: O
         prefix = "CODEFLY__SERVICE_SECRET_CONFIGURATION"
     key = f"{prefix}__{env_key}"
     key = key.upper()
-    value = os.getenv(key)
-    if not value:
-        return None
-    return decode_base64(value)
+    return os.getenv(key)
 
 
 def _get_project_configuration(name: str, key: str,
@@ -151,11 +150,7 @@ def _get_project_configuration(name: str, key: str,
         prefix = "CODEFLY__PROJECT_SECRET_CONFIGURATION"
     key = f"{prefix}__{env_key}"
     key = key.upper()
-    print(key)
-    value = os.getenv(key)
-    if not value:
-        return None
-    return decode_base64(value)
+    return os.getenv(key)
 
 
 def user_id_from_headers(headers: Dict[str, str]) -> Optional[str]:
