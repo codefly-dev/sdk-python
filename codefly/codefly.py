@@ -10,7 +10,7 @@ import base64
 class Service(BaseModel):
     name: Optional[str] = None
     version: Optional[str] = None
-    application: Optional[str] = None
+    module: Optional[str] = None
     domain: Optional[str] = None
     namespace: Optional[str] = None
     agent: Optional[dict] = None
@@ -31,7 +31,7 @@ def get_service() -> Optional[Service]:
 
 
 def get_unique() -> str:
-    return f"{get_service().application}/{get_service().name}"
+    return f"{get_service().module}/{get_service().name}"
 
 
 def init(init_dir: Optional[str] = None):
@@ -73,14 +73,14 @@ class Endpoint(BaseModel):
     port: int
 
 
-def endpoint(application: Optional[str] = None, service: Optional[str] = None, name: Optional[str] = None, api: Optional[str] = None) -> Optional[Endpoint]:
+def endpoint(module: Optional[str] = None, service: Optional[str] = None, name: Optional[str] = None, api: Optional[str] = None) -> Optional[Endpoint]:
     """Get the endpoint from the environment variable"""
     if not service:
         service = get_service().name
-    if not application:
-        application = get_service().application
+    if not module:
+        module = get_service().module
 
-    key = f"CODEFLY__ENDPOINT__{application}__{service}"
+    key = f"CODEFLY__ENDPOINT__{module}__{service}"
     if not name and api:
         name = api
     if not api and name:
@@ -105,32 +105,32 @@ def is_running() -> bool:
 
 
 def configuration(name: str = None, key: str = None, service: Optional[str] = None,
-                  application: Optional[str] = None) -> Optional[str]:
+                  module: Optional[str] = None) -> Optional[str]:
     if not name:
         raise KeyError("name is required")
     if not key:
         raise KeyError("key is required")
     if service:
-        return _get_service_configuration(service, name, key, application=application)
+        return _get_service_configuration(service, name, key, module=module)
     return _get_project_configuration(name, key)
 
 
-def secret(name: str = None, key: str = None, service: Optional[str] = None, application: Optional[str] = None) -> \
+def secret(name: str = None, key: str = None, service: Optional[str] = None, module: Optional[str] = None) -> \
         Optional[str]:
     if not name:
         raise KeyError("name is required")
     if not key:
         raise KeyError("key is required")
     if service:
-        return _get_service_configuration(service, name, key, application=application, is_secret=True)
+        return _get_service_configuration(service, name, key, module=module, is_secret=True)
     return _get_project_configuration(name, key, is_secret=True)
 
 
-def _get_service_configuration(service: str, name: str, key: str, application: Optional[str] = None,
+def _get_service_configuration(service: str, name: str, key: str, module: Optional[str] = None,
                                is_secret: bool = False) -> Optional[str]:
-    if not application:
-        application = get_service().application
-    env_key = f"{application}__{service}"
+    if not module:
+        module = get_service().module
+    env_key = f"{module}__{service}"
     # Replace - by _ as they are not great for env
     env_key = env_key.replace("-", "_")
     env_key = f"{env_key}__{name}__{key}"
