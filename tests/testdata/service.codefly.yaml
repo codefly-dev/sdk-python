@@ -1,11 +1,11 @@
 name: server
-version: 0.0.1
+version: 0.0.0
 module: backend
 agent:
-    kind: codefly:service
+    kind: codefly_sdk:service
     name: python-fastapi
     version: 0.0.0
-    publisher: codefly.dev
+    publisher: codefly_sdk.dev
 endpoints:
     - name: rest
       visibility: private

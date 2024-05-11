@@ -3,15 +3,12 @@ name = "codefly-sdk"
 version = "0.0.11"
 description = ""
 authors = ["Antoine Toussaint <antoine.toussaint@codefly.ai>"]
-packages = [{include = "codefly"}]
+packages = [{include = "codefly_sdk"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 pydantic = "^2.7.1"
 PyYAML = "^6.0.1"
-grpcio = "^1.63.0"
-protobuf = "^5.26.1"
-grpclib = "^0.4.7"
 
 
 [tool.poetry.dev-dependencies]
