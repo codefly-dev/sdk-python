@@ -65,6 +65,10 @@ def find_service_configuration_path(d: str) -> Optional[str]:
     return None
 
 
+def runtime_context() -> str:
+    return os.getenv("CODEFLY__RUNTIME_CONTEXT")
+
+
 def get_module() -> str:
     module = os.getenv("CODEFLY__MODULE")
     if module:
@@ -123,7 +127,7 @@ def endpoint(module: Optional[str] = None, service: Optional[str] = None, name: 
     return Endpoint(host=host, address=address, port_address=f":{port}", port=int(port))
 
 
-def is_running() -> bool:
+def in_runtime_mode() -> bool:
     """Returns true if we are in running mode."""
     key = "CODEFLY__RUNNING"
     return os.getenv(key) is not None
