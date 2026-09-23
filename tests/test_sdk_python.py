@@ -94,3 +94,34 @@ def test_secret_configuration_service_no_module():
     os.environ["CODEFLY__SERVICE_SECRET_CONFIGURATION__BACKEND__SERVER__AUTH__CONNECTION"] = value
     v = codefly.secret(service="server", name="auth", key="connection")
     assert v == value
+
+
+# Core spells every configuration variable with NameToKey (dash to underscore,
+# upper case), for the group and the key alike, so a dashed name must resolve to
+# the variable Codefly actually injects.
+def test_configuration_workspace_dashed_names():
+    os.environ["CODEFLY__WORKSPACE_CONFIGURATION__WORK_CONTEXT__AUTHORITY_JWKS_URL"] = value
+    assert codefly.configuration(name="work-context", key="authority-jwks-url") == value
+
+
+def test_secret_configuration_workspace_dashed_names():
+    os.environ["CODEFLY__WORKSPACE_SECRET_CONFIGURATION__INTERNAL_AUTH__CODEFLY_INTERNAL_TOKEN"] = value
+    assert codefly.secret(name="internal-auth", key="CODEFLY_INTERNAL_TOKEN") == value
+
+
+def test_configuration_service_dashed_names():
+    os.environ["CODEFLY__SERVICE_CONFIGURATION__BACKEND__API_SERVER__OBJECT_STORE__ACCESS_KEY"] = value
+    assert (
+        codefly.configuration(
+            service="api-server", module="backend", name="object-store", key="access-key"
+        )
+        == value
+    )
+
+
+def test_secret_configuration_service_dashed_names():
+    os.environ["CODEFLY__SERVICE_SECRET_CONFIGURATION__BACKEND__API_SERVER__OBJECT_STORE__ACCESS_KEY"] = value
+    assert (
+        codefly.secret(service="api-server", module="backend", name="object-store", key="access-key")
+        == value
+    )

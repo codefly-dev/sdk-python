@@ -158,6 +158,18 @@ def secret(name: str = None, key: str = None, service: Optional[str] = None, mod
     return _get_workspace_configuration(name, key, is_secret=True)
 
 
+def name_to_env_key(name: str) -> str:
+    """Spell a configuration group or key the way Codefly injects it.
+
+    Core derives every configuration variable with ``NameToKey``: dashes become
+    underscores and the result is upper-cased. A group such as ``work-context``
+    or a key such as ``authority-jwks-url`` therefore arrives as
+    ``WORK_CONTEXT`` and ``AUTHORITY_JWKS_URL``, and a lookup that keeps the
+    dash finds nothing.
+    """
+    return name.replace("-", "_").upper()
+
+
 def unique_to_env_key(unique: str) -> str:
     env_key = unique.replace("/", "__")
     # Replace - by _ as they are not great for env
@@ -171,7 +183,7 @@ def _get_service_configuration(service: str, name: str, key: str, module: Option
         module = get_module()
     unique = f"{module}/{service}"
     env_key = unique_to_env_key(unique)
-    env_key = f"{env_key}__{name}__{key}"
+    env_key = f"{env_key}__{name_to_env_key(name)}__{name_to_env_key(key)}"
     prefix = "CODEFLY__SERVICE_CONFIGURATION"
     if is_secret:
         prefix = "CODEFLY__SERVICE_SECRET_CONFIGURATION"
@@ -182,7 +194,7 @@ def _get_service_configuration(service: str, name: str, key: str, module: Option
 
 def _get_workspace_configuration(name: str, key: str,
                                  is_secret: bool = False) -> Optional[str]:
-    env_key = f"{name}__{key}"
+    env_key = f"{name_to_env_key(name)}__{name_to_env_key(key)}"
     prefix = "CODEFLY__WORKSPACE_CONFIGURATION"
     if is_secret:
         prefix = "CODEFLY__WORKSPACE_SECRET_CONFIGURATION"
